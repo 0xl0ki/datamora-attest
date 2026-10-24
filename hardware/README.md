@@ -6,6 +6,22 @@ consent is currently signed by a software demo key. This package turns an
 2.8" ST7789) into the **physical signer of operator consent**, so "who
 authorized the agent" is backed by hardware the operator holds.
 
+> **Attribution**: the device firmware is a derivative of
+> [butterfly-community/oskey-firmware](https://github.com/butterfly-community/oskey-firmware)
+> (MPL-2.0), with the Datamora theme, branding, logo, and bug/performance fixes.
+> See [NOTICE.md](../NOTICE.md) for the full change list and license compliance.
+
+## Firmware changes on top of OSKey (for `esp32_32e_2.8_led_display_st7789`)
+
+| Change | Detail |
+|---|---|
+| Datamora theme | `#CAF99C` / `#0A0A0A` palette (`theme-apply.sh`) |
+| Branding | "OSKey" → "datamora."; USB "datamora key"; BT "datamora"; AP "datamora-AP" |
+| Logo | splash wallet icon → Datamora 2×2 mark (`generated/wallet_logo.a8`) |
+| Touch fix | `int-gpios = <&gpio1 4 (GPIO_ACTIVE_LOW \| GPIO_PULL_UP)>` (GPIO36 offset + pull-up) |
+| Boot fix | `CONFIG_MAIN_STACK_SIZE=16384` (stack overflow) |
+| Performance | LVGL VDB 24 + double VDB + flush thread |
+
 ## The four ideas
 
 | Idea | What it is | Status |

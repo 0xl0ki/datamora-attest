@@ -25,6 +25,14 @@ Datamora Attest 把一次 Agent 执行封装成一份**自验证、内容寻址�
 
 > 安全模型与"已证明 vs 断言"边界见 [SECURITY.md](SECURITY.md)；与 TraceQuay / riftmark 的定位差异见 [docs/POSITIONING.md](docs/POSITIONING.md)。
 
+## 硬件授权（OSKey → Datamora 定制固件）
+
+S4 授权的**生产级形态**：操作者用一把**物理硬件钥匙**（ESP32 + 2.8" ST7789，基于 [OSKey](https://github.com/butterfly-community/oskey-firmware)，MPL-2.0）签署 EIP-191 授权消息——私钥永不出设备。设备固件已定制：Datamora 主题、品牌文案、Logo、触摸/启动修复与渲染优化。详见 [hardware/README.md](hardware/README.md) 与 [NOTICE.md](NOTICE.md)（版权与致谢、MPL-2.0 合规）。
+
+- 硬件签名桥：`hardware/bridge.mjs` + `hardware/consent.mjs`（签名/恢复/篡改检测已实测）
+- 签名器 CLI：`hardware/sign-cli.mjs`（打印授权消息 → 设备签名 → 贴回验证）
+- 定制固件：`hardware/firmware/oskey-datamora-theme.bin`（已编译，含全部定制）
+
 ## 关键技术栈
 
 - Node.js ≥ 22（v24 验证）；**运行时零依赖**（仅 `node:crypto`/`node:http`/`node:fs`；live 锚定路径按需懒加载 ethers）
