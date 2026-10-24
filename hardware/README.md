@@ -8,7 +8,7 @@ authorized the agent" is backed by hardware the operator holds.
 
 > **Attribution**: the device firmware is a derivative of
 > [butterfly-community/oskey-firmware](https://github.com/butterfly-community/oskey-firmware)
-> (MPL-2.0), with the Datamora theme, branding, logo, and bug/performance fixes.
+> (MPL-2.0) — fork: [0xl0ki/oskey-firmware-datamora](https://github.com/0xl0ki/oskey-firmware-datamora) — with the Datamora theme, branding, logo, and bug/performance fixes.
 > See [NOTICE.md](../NOTICE.md) for the full change list and license compliance.
 
 ## Firmware changes on top of OSKey (for `esp32_32e_2.8_led_display_st7789`)

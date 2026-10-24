@@ -18,7 +18,7 @@ Datamora Attest 的硬件演示固件基于 **[butterfly-community/oskey-firmwar
 MPL-2.0 合规要点：
 
 - 固件的**被修改文件**保持原 MPL-2.0 许可证头；未被修改的文件保持原状。
-- 若分发修改后的固件二进制（如 `firmware/oskey-datamora-theme.bin`），须按 MPL-2.0 第 3.2 节**向接收者提供修改后的源码**（推荐以 GitHub fork 形式公开，如 `0xl0ki/oskey-firmware-datamora`）。
+- 若分发修改后的固件二进制（如 `firmware/oskey-datamora-theme.bin`），须按 MPL-2.0 第 3.2 节**向接收者提供修改后的源码**（已公开：**[github.com/0xl0ki/oskey-firmware-datamora](https://github.com/0xl0ki/oskey-firmware-datamora)**）。
 - 内部标识符（`CONFIG_OSKEY_*`、`oskey_*` 等）**有意保留**，以保证溯源可审计与 patch 系统兼容。
 
 ## 其余代码

@@ -77,10 +77,8 @@ source /Users/kayn/export-esp.sh
 west build -p always -b esp32_devkitc/esp32/procpu -d build/oskey \
   -- -DCONFIG_OSKEY_STORAGE=y -DCONFIG_OSKEY_DISPLAY=y \
   -DCONFIG_MAIN_STACK_SIZE=16384 \
+  -DCONFIG_LV_Z_VDB_SIZE=24 -DCONFIG_LV_Z_DOUBLE_VDB=y \
+  -DCONFIG_LV_Z_FLUSH_THREAD=y -DCONFIG_LV_Z_FLUSH_THREAD_STACK_SIZE=4096 \
   -DEXTRA_DTC_OVERLAY_FILE="$(pwd)/boards/esp32_32e_2.8_led_display_st7789.overlay"
-# 刷机（务必 115200）：
-esptool --chip esp32 --port /dev/cu.usbserial-XXX --baud 115200 \
-  --before default-reset --after hard-reset write-flash \
-  -u --flash-mode dio --flash-freq 40m --flash-size 4MB \
-  0x1000 build/oskey/zephyr/zephyr.bin
 ```
+（最终配置：无 SMP/无 PSRAM/无调试日志；SMP 与 PSRAM 均实验过——SMP 导致黑屏、板子为 WROOM 无 PSRAM，均已回退）
