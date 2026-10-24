@@ -112,6 +112,7 @@ const server = createServer(async (req, res) => {
       const type = p.endsWith('.css') ? 'text/css' : p.endsWith('.svg') ? 'image/svg+xml' : 'application/javascript';
       return send(res, 200, readFileSync(join(PUBLIC, staticFiles[p]), 'utf8'), {
         'content-type': `${type}; charset=utf-8`,
+        'cache-control': 'no-cache, no-store, must-revalidate',
       });
     }
     if (req.method === 'GET' && p === '/health') return json(res, 200, { ok: true, chainId: 4663 });
