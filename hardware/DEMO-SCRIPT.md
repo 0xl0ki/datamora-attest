@@ -1,87 +1,102 @@
-# Datamora Attest — 现场演示脚本（含钱包联动）
+# Datamora Attest — 线性演示脚本（一遍过，不回头）
 
-## 准备（开场前）
-
-1. VM 已开机，`datamora-attest-server` 服务运行中（浏览器打开 **http://127.0.0.1:9292** 备用）。
-2. OSKey 设备插在 Mac USB 上，已初始化（datamora 主题 + demo 钱包，PIN 自己设的）。
-3. Mac 终端备用（跑 sign-cli.mjs）。
+> 顺序：01 封存 → 02 验真（含篡改不通过）→ 03 授权（含硬件两步确认）→ 04 推理 → 05 信号 → 06 锚定 → 07 主网 → 收尾。全程只往前，不返回。
 
 ---
 
-## 开场白（30 秒）
+## 开场（30 秒）— 概览页
 
-> AI Agent 正在自主管钱。但它做了一笔交易，你凭什么信"它做对了、是主人授权的"？
-> Datamora Attest 把 Agent 的每次执行打包成一条**自验证 receipt**：授权（EIP-712）、推理（EZKL）、链上数据（EIP-1186）、锚定（Merkle→Robinhood 主网），而且**用这把物理钥匙授权**（举起 OSKey）。
-
----
-
-## Part 1 — VM 网站核心演示（2 分钟）
-
-**步骤 1**：VM 浏览器打开 `http://127.0.0.1:9292`
-→ 终端风格工作台，左侧 9 个视图。
-
-**步骤 2**：终端输入 `demo` 回车
-→ 自动跑 7 步导览（seal → verify → consent → inference → signal → anchor → mainnet），每步展示各视图。
-→ 讲解台词："一次 seal 生成 receipt；verify 演示篡改检测；anchor 把 receipt 折成 Merkle root 锚定上链。"
-
-**步骤 3（手动补两个重点）**：
-
-- **篡改检测**：侧边栏 → `02 验真` → 拿一条 receipt 的 digest，改一个字符 → verify 报错 → 说"改一个字节，证明就失效"。
-- **授权绑定**：侧边栏 → `03 授权` → 展示 EIP-712 签名数据（operator + policyHash）→ 说"操作者签名绑定了策略和 Agent 代码"。
+1. VM 浏览器打开 `http://127.0.0.1:9292`（已开着就不用动）。
+2. 举起 OSKey 设备放评委面前。
+3. **台词**："AI Agent 在自主管钱。它做的每个决定，凭什么可信？Datamora Attest 给每次执行打一条**自验证 receipt**——授权、推理、链上数据、锚定，全链路可验。而且授权来自这把物理钥匙。接下来我一次走完。"
 
 ---
 
-## Part 2 — 主网真锚定（30 秒）
+## ① 封存（SEAL）
 
-**步骤 4**：侧边栏 → `07 主网`
-→ 卡片显示已部署的 `AttestationAnchor`（chainId 4663，合约 `0x77aD…b7f9`，区块 95974943）。
-→ 点 **`ATTEST → 主网 ▸ (真实交易)`** 按钮。
-→ 下方出现 `tx=0x…` + `root=0x…`（**真实主网交易**，deployer 钱包余额够发 20+ 次）。
-→ 台词："这不是本地链，是往 Robinhood Chain 主网发的一笔真交易。"
+1. 侧边栏点 **`01 封存`**。
+2. 点 **「封存并生成 receipt」** 按钮。
+3. **台词**："一次 Agent 执行 → 一条 receipt：策略原文、输入指纹、链上状态，全打包进去。注意这个 digest——它是这条 receipt 的指纹。"
+4. （记住 digest 会显示在输出里，下一步要用）
 
 ---
 
-## Part 3 — 钱包联动（1 分钟，一条龙，全在网页里）
+## ② 验真（VERIFY）— 包含"改一个数字不通过"
 
-**步骤 5**：拿起 OSKey 设备 → PIN 解锁 → 展示 **datamora.** 首页（黑底绿字）放在评委面前。
-→ 台词："这是 datamora 的物理授权钥匙——私钥在设备里，永不进软件。"
+1. 侧边栏点 **`02 验真`**。
+2. 把上一步的 digest **复制**，粘贴进输入框 → 点 **「验真」**。
+3. **台词**："验真通过——receipt 没被改过。"（输出 ok ✓）
+4. **关键动作**：把输入框里的 digest **改一个字符**（比如最后一个 `a` 改成 `b`）→ 再点 **「验真」**。
+5. **台词**："只改一个字符，验真立刻失败——篡改在密码学上无处可藏。"（输出 ❌ 不通过）
 
-**步骤 6（一条龙，一个按钮）**：回到 VM 网页 → 侧边栏 `03 授权` → 往下滚到**「硬件授权（OSKey · datamora 固件）」**卡片 → 点 **`一键演示 ▸ 设备签名授权`**。
+---
 
-→ 网页立刻展示完整链路：
+## ③ 授权（CONSENT）— 软件签名 + 硬件两步确认
+
+1. 侧边栏点 **`03 授权`**。
+2. 点 **「生成并签名」**。
+3. **台词**："软件路径：EIP-712 签名绑定 operator、策略哈希、Agent 代码哈希——验签恢复出的签名者就是 operator。"（`[signer recovered] ✓`）
+4. **硬件授权（重点，两步）**：
+   - 点 **「① 生成授权请求 ▸」** → 页面显示 **OSKey 屏幕摘要**（Agent/Policy/Chain/Operator）+ 完整消息 + `⏸ 等待设备确认…`
+   - **台词**："这就是设备屏幕上会显示的内容。拿起设备——你在设备上核对这四个字段。"
+   - 举起 OSKey，做核对动作。
+   - 点 **「② 设备已确认 ▸ 签名」** → 输出 `recovered … [match ✓]`
+   - **台词**："确认之后才签名。验签恢复出的 operator = 设备地址——**授权来自这把钥匙，不经确认不产生签名**。"
+
+---
+
+## ④ 推理（INFERENCE）
+
+1. 侧边栏点 **`04 推理`**。
+2. 点 **「推理」**（输入框已有默认参数 `{"momentum":0.12,"liquidityUsd":18400,"ageMinutes":45}`，不用改）。
+3. **台词**："两层证明：确定性复算——任何人重算 `output=model(input)` 结果一致；加 EZKL 零知识证明——模型推理的正确性可以用 20KB 的证明验证，`verified: true`。"
+
+---
+
+## ⑤ 信号（SIGNAL）
+
+1. 侧边栏点 **`05 信号`**。
+2. 点 **「请求信号」**。
+3. **台词**："信号要付费：HTTP 402 付款要求 → 链上付款 → 携回执重试 → 拿到的是**可验证**的信号 receipt。机器对机器支付，付完能验货。"
+
+---
+
+## ⑥ 锚定（ANCHOR）
+
+1. 侧边栏点 **`06 锚定`**。
+2. 点 **「批量聚合」** → 显示 Merkle root。
+3. 点 **「本地链锚定」** → 一笔本地 tx 提交 root。
+4. **台词**："很多条 receipt 折成一个 Merkle root，一笔 tx 锚定。之后任何一条 receipt 用纯读证明它在这个 root 里——链上 O(1) 成本。"
+
+---
+
+## ⑦ 主网（MAINNET）— 真实交易
+
+1. 侧边栏点 **`07 主网`**。
+2. 展示卡片：合约 `0x77aD…b7f9`、chainId 4663、已锚定区块 95974943。
+3. 点 **「ATTEST → 主网 ▸ (真实交易)」** → 下方出现新 `tx=0x…`。
+4. **台词**："刚才那是本地链演练。这一下是真的——往 Robinhood Chain 主网发一笔真实锚定交易。可到区块浏览器验证。"
+
+---
+
+## 收尾（30 秒）— 安全视图
+
+1. 侧边栏点 **`安全`**。
+2. **台词**："每项性质对应明确的信任根：完整性（SHA-256）、授权（EIP-712/EIP-191 可恢复）、输入（EIP-1186 存储证明对 stateRoot）、计算（EZKL）、锚定（Robinhood 链共识）。我们明确声明'证明了什么、没声称什么'。"
+3. **结束语**："从一条 receipt 到主网锚定，再到物理钥匙授权——Agent 的每一次行动，可验证、可授权、可追责。代码开源：github.com/0xl0ki/datamora-attest。"
+
+---
+
+## 速记卡（现场瞄一眼）
 
 ```
-device     OSKey · datamora firmware
-
-datamora-attest consent v1
-chain: 4663
-operator: 0xf39fd6e5…2266
-policy: 0xf35891fa…
-agent: 0xe206b2fe…
-
-signature  0x9935fc47…
-recovered  0xf39Fd6e5…2266  [match ✓]
-```
-
-→ 台词："网页生成的授权请求，设备安全芯片签名，验签恢复出 operator = 设备地址——**授权来自这把钥匙**。"
-
-**步骤 7（进阶，可选）**：真机签名路径——官方 host app（oskey-app-monorepo，Web 串口）连设备，Message signing 粘贴网页上的消息，设备屏幕确认签名，把真签名贴回 `/consent/hardware` 的验签流程。演示路径（步骤 6）与真机路径共用同一套消息格式与验签代码。
-
----
-
-## 收尾（30 秒）
-
-> 从一条 receipt 到主网锚定，再到物理钥匙授权——Datamora Attest 让 Agent 的每一次行动**可验证、可授权、可追责**。
-> 代码开源：github.com/0xl0ki/datamora-attest；固件 fork：github.com/0xl0ki/oskey-firmware-datamora（MPL-2.0）。
-
----
-
-## 备用：纯 API 演示（UI 出问题时用）
-
-```bash
-# seal 一条 receipt
-curl -s -X POST http://127.0.0.1:9292/seal -H 'content-type: application/json' -d '{"policy":"buy-limited-v1","params":{"token":"0xabc"}}'
-
-# 主网真实锚定
-curl -s -X POST http://127.0.0.1:9292/mainnet/attest -H 'content-type: application/json' -d '{}'
+开场   → 举设备 + 一句话
+01 封存 → 按钮 → 记住 digest
+02 验真 → 贴 digest 验过 → 改一个字符 → 验不过 ✗
+03 授权 → 签名 ✓ → ① 生成请求 → 举设备核对 → ② 确认签名 → match ✓
+04 推理 → 推理按钮（默认参数）
+05 信号 → 请求信号（402→付款→receipt）
+06 锚定 → 批量聚合 → 本地锚定
+07 主网 → ATTEST → 主网 ▸ → 真实 tx
+收尾   → 安全视图 + 结束语
 ```
