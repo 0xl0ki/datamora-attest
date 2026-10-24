@@ -186,6 +186,41 @@ const server = createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'POST' && p === '/consent/hardware/request') {
+      // 第一步：生成授权请求（设备屏上会显示的摘要），等待设备确认
+      const { createHash } = await import('node:crypto');
+      const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');
+      const reqc = buildSignRequest({
+        operator: DEMO_OPERATOR,
+        policyHash: sha('policy:buy-limited-v1'),
+        agentCodeHash: sha('agent:flash-v1'),
+        chainId: 4663, nonce: 1,
+      });
+      return json(res, 200, { ok: true, message: reqc.message, summary: reqc.summary, signed: false });
+    }
+
+    if (req.method === 'POST' && p === '/consent/hardware/sign') {
+      // 第二步：设备已确认 → 签名 → 验签恢复 operator
+      const { createHash } = await import('node:crypto');
+      const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');
+      const reqc = buildSignRequest({
+        operator: DEMO_OPERATOR,
+        policyHash: sha('policy:buy-limited-v1'),
+        agentCodeHash: sha('agent:flash-v1'),
+        chainId: 4663, nonce: 1,
+      });
+      const signature = await signHardware(reqc.message, DEMO_OPERATOR_KEY);
+      const recovered = await recoverHardware(reqc.message, signature);
+      return json(res, 200, {
+        ok: true,
+        signature,
+        recovered,
+        operator: DEMO_OPERATOR.toLowerCase(),
+        match: recovered.toLowerCase() === DEMO_OPERATOR.toLowerCase(),
+        signed: true,
+      });
+    }
+
     if (req.method === 'GET' && p === '/inference/model') {
       const { MODEL, modelHash } = await import('./lib/inference.mjs');
       return json(res, 200, { model: MODEL, modelHash: modelHash() });

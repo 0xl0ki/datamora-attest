@@ -292,10 +292,13 @@ function renderConsent() {
     <div class="card"><pre id="consent-out" class="mono">loading…</pre></div>
     <div class="row"><button class="btn" id="consent-btn">${esc(t('consent.btn'))}</button><button class="btn ghost" id="consent-tamper">${esc(t('consent.tamper'))}</button></div>
     <div class="card"><pre class="mono">${lang === 'zh'
-      ? '── 硬件授权（OSKey · datamora 固件）────────────────\n物理钥匙签名授权：私钥在设备安全芯片内，永不进软件。'
-      : '── HARDWARE CONSENT (OSKey · datamora firmware)───\nPhysical-key authorization: the key lives in the device, never in software.'}</pre></div>
-    <div class="row"><button class="btn" id="hw-btn">${lang === 'zh' ? '一键演示 ▸ 设备签名授权' : 'RUN ▸ device-sign consent'}</button></div>
-    <div class="card"><pre id="hw-out" class="mono">${lang === 'zh' ? '点击上方按钮，生成授权请求 → 设备签名 → 验签恢复 operator。' : 'Click to generate the mandate, sign on-device, and recover the operator.'}</pre></div>`;
+      ? '── 硬件授权（OSKey · datamora 固件）────────────────\n物理钥匙签名授权：先看摘要 → 设备确认 → 才签名。'
+      : '── HARDWARE CONSENT (OSKey · datamora firmware)───\nReview on device → confirm → sign. The key never leaves the device.'}</pre></div>
+    <div class="row">
+      <button class="btn" id="hw-req-btn">${lang === 'zh' ? '① 生成授权请求 ▸' : '① GENERATE MANDATE ▸'}</button>
+      <button class="btn ghost" id="hw-sign-btn" disabled>${lang === 'zh' ? '② 设备已确认 ▸ 签名' : '② CONFIRMED ON DEVICE ▸ SIGN'}</button>
+    </div>
+    <div class="card"><pre id="hw-out" class="mono">${lang === 'zh' ? '点击①：生成授权请求，模拟 OSKey 屏幕显示摘要。\n确认内容无误后，在设备上"确认"，再点②签名。' : 'Click ① to generate the mandate (as shown on the OSKey screen).\nAfter reviewing on the device, click ② to sign.'}</pre></div>`;
   $('consent-btn').onclick = async () => {
     const { body } = await jfetch('/seal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(DEMO_INPUT()) });
     S.lastDigest = body.digest;
@@ -313,15 +316,27 @@ function renderConsent() {
     c.consent.operator = '0x' + '11'.repeat(20);
     $('consent-out').innerHTML = `<span class="warn">[demo]</span> tampered operator → receipt_digest_mismatch\n(wrong-key consent → consent_signer_mismatch)\noriginal digest=${esc(body.digest)}`;
   };
-  $('hw-btn').onclick = async () => {
-    $('hw-out').innerHTML = (lang === 'zh' ? '正在生成授权请求 + 设备签名…' : 'Generating mandate + on-device signature…');
-    const { body } = await jfetch('/consent/hardware', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  $('hw-req-btn').onclick = async () => {
+    $('hw-out').innerHTML = (lang === 'zh' ? '生成授权请求…' : 'Generating mandate…');
+    const { body } = await jfetch('/consent/hardware/request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    const rows = body.summary.map(([k, v]) => `${esc(k).padEnd(10)} ${esc(v)}`).join('\n');
     $('hw-out').innerHTML =
-      `device       ${esc(body.device)}\n\n` +
-      `${esc(body.message)}\n\n` +
-      `signature    ${esc(body.signature.slice(0, 66))}…\n` +
-      `recovered    ${esc(body.recovered)}  <span class="${body.match ? 'ok' : 'err'}">[${body.match ? 'match ✓' : 'MISMATCH'}]</span>\n` +
-      `operator     ${esc(body.operator)}`;
+      `${lang === 'zh' ? '【OSKey 屏幕摘要 — 请在设备上核对】' : '[OSKEY SCREEN — REVIEW ON DEVICE]'}\n\n` +
+      rows + `\n\n` +
+      `${lang === 'zh' ? '【完整授权消息（设备实际签署内容）】' : '[FULL MESSAGE — WHAT THE DEVICE SIGNS]'}\n` +
+      esc(body.message) + `\n\n` +
+      `<span class="warn">⏸ 等待设备确认… 确认无误后点 ②</span>`;
+    $('hw-sign-btn').disabled = false;
+  };
+  $('hw-sign-btn').onclick = async () => {
+    $('hw-out').innerHTML = (lang === 'zh' ? '设备已确认 → 安全芯片签名中…' : 'Confirmed → secure-element signing…');
+    const { body } = await jfetch('/consent/hardware/sign', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    $('hw-out').innerHTML +=
+      `\n\nsignature  ${esc(body.signature.slice(0, 66))}…\n` +
+      `recovered  ${esc(body.recovered)}  <span class="${body.match ? 'ok' : 'err'}">[${body.match ? 'match ✓' : 'MISMATCH'}]</span>\n` +
+      `operator   ${esc(body.operator)}\n\n` +
+      `<span class="ok">${lang === 'zh' ? '✅ 授权来自物理钥匙：签名恢复出的 operator = 设备地址' : '✅ AUTHORIZATION FROM THE PHYSICAL KEY: recovered operator = device address'}</span>`;
+    $('hw-sign-btn').disabled = true;
   };
 }
 
