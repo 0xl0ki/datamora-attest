@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DATAMORA // ATTEST — Verifiable Agent Execution Attestation</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
+<div class="crt-flicker"></div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/logo.svg" class="brand-mark" alt="DATAMORA">
+      <div class="brand-name">DATAMORA<span class="brand-sub">//ATTEST</span></div>
+    </div>
+    <nav id="nav">
+      <a data-view="overview" class="active"><span class="n">00</span><span class="label">总览 / 演示</span></a>
+      <a data-view="seal"><span class="n">01</span><span class="label">执行存证</span></a>
+      <a data-view="verify"><span class="n">02</span><span class="label">验真</span></a>
+      <a data-view="consent"><span class="n">03</span><span class="label">授权 (EIP-712)</span></a>
+      <a data-view="inference"><span class="n">04</span><span class="label">推理证明</span></a>
+      <a data-view="signal"><span class="n">05</span><span class="label">付费信号 (x402)</span></a>
+      <a data-view="anchor"><span class="n">06</span><span class="label">链上锚定</span></a>
+      <a data-view="mainnet"><span class="n">07</span><span class="label">主网</span></a>
+      <a data-view="audit"><span class="n">08</span><span class="label">审计流水</span></a>
+      <a data-view="security"><span class="n">09</span><span class="label">安全模型</span></a>
+    </nav>
+    <div class="side-foot">
+      <div class="lang-toggle">
+        <button id="lang-zh" class="lang-btn active">中</button>
+        <button id="lang-en" class="lang-btn">EN</button>
+      </div>
+      <div class="dim" data-i18n="foot.chain">robinhood-mainnet · chainId 4663</div>
+      <button id="tour-btn" class="tour" data-i18n="tour.start">▶ 一键演示</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="tour-bar" id="tour-bar" hidden>
+      <span id="tour-msg">步骤 1/7 · 执行存证</span>
+      <button id="tour-next" class="mini" data-i18n="tour.next">下一步 ▸</button>
+      <button id="tour-skip" class="mini ghost" data-i18n="tour.skip">跳过</button>
+    </div>
+
+    <section class="view active" id="view-overview"></section>
+    <section class="view" id="view-seal"></section>
+    <section class="view" id="view-verify"></section>
+    <section class="view" id="view-consent"></section>
+    <section class="view" id="view-inference"></section>
+    <section class="view" id="view-signal"></section>
+    <section class="view" id="view-anchor"></section>
+    <section class="view" id="view-mainnet"></section>
+    <section class="view" id="view-audit"></section>
+    <section class="view" id="view-security"></section>
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

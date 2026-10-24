@@ -1,0 +1,25 @@
+{
+  "name": "datamora-attest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Verifiable agent-execution attestation for autonomous on-chain agents (ETH Shenzhen 2026).",
+  "engines": { "node": ">=22.16.0" },
+  "scripts": {
+    "test": "node test.mjs",
+    "test:crosslang": "./test-cross-lang.sh",
+    "seed": "node seed.mjs",
+    "start": "node server.mjs",
+    "local:demo": "node scripts/local-demo.mjs",
+    "local:node": "node scripts/local-node.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:mainnet": "node scripts/deploy-mainnet.mjs"
+  },
+  "dependencies": {
+    "ethers": "5.8.0"
+  },
+  "devDependencies": {
+    "ganache": "^7.9.2",
+    "solc": "0.8.20"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+data/receipts/
+data/payments/
+data/deployment.json
+data/deployment-mainnet.json
+.mainnet-key
+*.log
+.env
+.env.*
+!*.env.example
