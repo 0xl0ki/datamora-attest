@@ -290,7 +290,12 @@ function renderConsent() {
     <h1>${esc(t('consent.title'))}</h1>
     <div class="sub">${esc(t('consent.sub'))}</div>
     <div class="card"><pre id="consent-out" class="mono">loading…</pre></div>
-    <div class="row"><button class="btn" id="consent-btn">${esc(t('consent.btn'))}</button><button class="btn ghost" id="consent-tamper">${esc(t('consent.tamper'))}</button></div>`;
+    <div class="row"><button class="btn" id="consent-btn">${esc(t('consent.btn'))}</button><button class="btn ghost" id="consent-tamper">${esc(t('consent.tamper'))}</button></div>
+    <div class="card"><pre class="mono">${lang === 'zh'
+      ? '── 硬件授权（OSKey · datamora 固件）────────────────\n物理钥匙签名授权：私钥在设备安全芯片内，永不进软件。'
+      : '── HARDWARE CONSENT (OSKey · datamora firmware)───\nPhysical-key authorization: the key lives in the device, never in software.'}</pre></div>
+    <div class="row"><button class="btn" id="hw-btn">${lang === 'zh' ? '一键演示 ▸ 设备签名授权' : 'RUN ▸ device-sign consent'}</button></div>
+    <div class="card"><pre id="hw-out" class="mono">${lang === 'zh' ? '点击上方按钮，生成授权请求 → 设备签名 → 验签恢复 operator。' : 'Click to generate the mandate, sign on-device, and recover the operator.'}</pre></div>`;
   $('consent-btn').onclick = async () => {
     const { body } = await jfetch('/seal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(DEMO_INPUT()) });
     S.lastDigest = body.digest;
@@ -307,6 +312,16 @@ function renderConsent() {
     const c = JSON.parse(JSON.stringify(body.receipt));
     c.consent.operator = '0x' + '11'.repeat(20);
     $('consent-out').innerHTML = `<span class="warn">[demo]</span> tampered operator → receipt_digest_mismatch\n(wrong-key consent → consent_signer_mismatch)\noriginal digest=${esc(body.digest)}`;
+  };
+  $('hw-btn').onclick = async () => {
+    $('hw-out').innerHTML = (lang === 'zh' ? '正在生成授权请求 + 设备签名…' : 'Generating mandate + on-device signature…');
+    const { body } = await jfetch('/consent/hardware', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    $('hw-out').innerHTML =
+      `device       ${esc(body.device)}\n\n` +
+      `${esc(body.message)}\n\n` +
+      `signature    ${esc(body.signature.slice(0, 66))}…\n` +
+      `recovered    ${esc(body.recovered)}  <span class="${body.match ? 'ok' : 'err'}">[${body.match ? 'match ✓' : 'MISMATCH'}]</span>\n` +
+      `operator     ${esc(body.operator)}`;
   };
 }
 

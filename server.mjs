@@ -17,6 +17,8 @@ import { seal, verify } from './lib/receipt.mjs';
 import { digest } from './lib/canonical.mjs';
 import { sealInference } from './lib/inference.mjs';
 import { makeConsent, DEMO_OPERATOR, DEMO_OPERATOR_KEY } from './lib/consent.mjs';
+import { buildSignRequest } from './hardware/bridge.mjs';
+import { signHardware, recoverHardware } from './hardware/consent.mjs';
 import { fetchStateProof } from './lib/stateproof.mjs';
 import { mainnetAttest, MAINNET_CONTRACT } from './lib/mainnet.mjs';
 import { buildBatch, attestDryRun, attestLive, makeProof } from './lib/anchor.mjs';
@@ -157,6 +159,30 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'GET' && p === '/consent/operator') {
       return json(res, 200, { operator: DEMO_OPERATOR, note: 'demo EIP-712 signer (Hardhat account #0)' });
+    }
+
+    if (req.method === 'POST' && p === '/consent/hardware') {
+      // 一条龙硬件授权：生成授权请求 → 设备签名（demo 密钥模拟 OSKey 安全芯片）→ 验签恢复 operator
+      const { createHash } = await import('node:crypto');
+      const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');
+      const reqc = buildSignRequest({
+        operator: DEMO_OPERATOR,
+        policyHash: sha('policy:buy-limited-v1'),
+        agentCodeHash: sha('agent:flash-v1'),
+        chainId: 4663, nonce: 1,
+      });
+      const signature = await signHardware(reqc.message, DEMO_OPERATOR_KEY);
+      const recovered = await recoverHardware(reqc.message, signature);
+      return json(res, 200, {
+        ok: true,
+        device: 'OSKey · datamora firmware',
+        message: reqc.message,
+        summary: reqc.summary,
+        signature,
+        recovered,
+        operator: DEMO_OPERATOR.toLowerCase(),
+        match: recovered.toLowerCase() === DEMO_OPERATOR.toLowerCase(),
+      });
     }
 
     if (req.method === 'GET' && p === '/inference/model') {
