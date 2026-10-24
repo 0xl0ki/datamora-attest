@@ -41,72 +41,31 @@
 
 ---
 
-## Part 3 — 钱包联动（2 分钟，最抓眼球）
+## Part 3 — 钱包联动（1 分钟，一条龙，全在网页里）
 
-**步骤 5**：拿起 OSKey 设备 → 输入 PIN 解锁 → 展示 **datamora.** 首页（黑底绿字）。
+**步骤 5**：拿起 OSKey 设备 → PIN 解锁 → 展示 **datamora.** 首页（黑底绿字）放在评委面前。
 → 台词："这是 datamora 的物理授权钥匙——私钥在设备里，永不进软件。"
 
-**步骤 6**：Mac 终端运行签名器：
+**步骤 6（一条龙，一个按钮）**：回到 VM 网页 → 侧边栏 `03 授权` → 往下滚到**「硬件授权（OSKey · datamora 固件）」**卡片 → 点 **`一键演示 ▸ 设备签名授权`**。
 
-```bash
-cd /Users/kayn/Desktop/datamora/datamora-attest
-node hardware/sign-cli.mjs
-```
-
-终端会打印要签名的授权消息（人可读）：
+→ 网页立刻展示完整链路：
 
 ```
+device     OSKey · datamora firmware
+
 datamora-attest consent v1
 chain: 4663
 operator: 0xf39fd6e5…2266
 policy: 0xf35891fa…
 agent: 0xe206b2fe…
-expires: 0
-nonce: 1
+
+signature  0x9935fc47…
+recovered  0xf39Fd6e5…2266  [match ✓]
 ```
 
-→ 台词："网页上那笔授权，真正的签署者是这把设备。"
+→ 台词："网页生成的授权请求，设备安全芯片签名，验签恢复出 operator = 设备地址——**授权来自这把钥匙**。"
 
-**步骤 7（A 或 B 二选一）**：
-
-**A. 真机签名（有官方 host app 时）**：
-1. 启动官方前端：`git clone https://github.com/butterfly-community/oskey-app-monorepo && cd oskey-app-monorepo && pnpm install && pnpm run dev`（Web 串口）。
-2. 浏览器连设备（WebSerial）→ Message signing → 粘贴步骤 6 的消息 → 设备屏幕显示消息 → **点确认签名**。
-3. 复制返回的签名。
-
-**B. 演示路径（最快，无 host app）**：
-1. 用 demo 密钥生成对应签名（终端再开一个窗口）：
-
-```bash
-cd /Users/kayn/Desktop/datamora/datamora-attest
-node --input-type=module -e '
-import { createHash } from "node:crypto";
-import { buildSignRequest } from "./hardware/bridge.mjs";
-import { signHardware } from "./hardware/consent.mjs";
-import { DEMO_OPERATOR, DEMO_OPERATOR_KEY } from "./lib/consent.mjs";
-const sha = (s) => "0x" + createHash("sha256").update(s).digest("hex");
-const req = buildSignRequest({ operator: DEMO_OPERATOR, policyHash: sha("policy:buy-limited-v1"), agentCodeHash: sha("agent:flash-v1"), chainId: 4663, nonce: 1 });
-process.stdout.write(await signHardware(req.message, DEMO_OPERATOR_KEY));
-' > /tmp/sig.txt && echo "签名: $(head -c 20 /tmp/sig.txt)…"
-```
-2. 台词："这台设备里存的是 operator 私钥（demo 环境用同密钥演示验签链路）。"
-
-**步骤 8**：回到 sign-cli.mjs 窗口，粘贴签名：
-
-```bash
-cat /tmp/sig.txt | node hardware/sign-cli.mjs
-```
-
-→ 输出：
-
-```
-recovered operator : 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-expected operator  : 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-匹配               : ✅ PASS
-```
-
-→ 台词："签名恢复出的 operator 就是设备地址——**授权来自这把钥匙**。"
-→ 若篡改消息再验（`node hardware/sign-cli.mjs` 输入非该 operator 的签名）→ 不匹配 → "密码学上不可伪造"。
+**步骤 7（进阶，可选）**：真机签名路径——官方 host app（oskey-app-monorepo，Web 串口）连设备，Message signing 粘贴网页上的消息，设备屏幕确认签名，把真签名贴回 `/consent/hardware` 的验签流程。演示路径（步骤 6）与真机路径共用同一套消息格式与验签代码。
 
 ---
 
