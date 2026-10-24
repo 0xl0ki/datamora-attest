@@ -199,7 +199,29 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { ok: true, message: reqc.message, summary: reqc.summary, signed: false });
     }
 
-    if (req.method === 'POST' && p === '/consent/hardware/sign') {
+    if (req.method === 'POST' && p === '/consent/hardware/verify') {
+      // 真机路径：设备真实签名（经 host app）后，贴回验签
+      const { createHash } = await import('node:crypto');
+      const { signature } = JSON.parse(await readBody(req));
+      const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');
+      const reqc = buildSignRequest({
+        operator: DEMO_OPERATOR,
+        policyHash: sha('policy:buy-limited-v1'),
+        agentCodeHash: sha('agent:flash-v1'),
+        chainId: 4663, nonce: 1,
+      });
+      const recovered = await recoverHardware(reqc.message, signature);
+      return json(res, 200, {
+        ok: true,
+        recovered,
+        operator: DEMO_OPERATOR.toLowerCase(),
+        match: recovered.toLowerCase() === DEMO_OPERATOR.toLowerCase(),
+        note: recovered.toLowerCase() !== DEMO_OPERATOR.toLowerCase()
+          ? '签名不属于该 operator（设备用哪个钱包签名，恢复出的就是哪个地址）'
+          : '设备签名验证通过',
+      });
+    }
+
       // 第二步：设备已确认 → 签名 → 验签恢复 operator
       const { createHash } = await import('node:crypto');
       const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');

@@ -298,7 +298,11 @@ function renderConsent() {
       <button class="btn" id="hw-req-btn">${lang === 'zh' ? '① 生成授权请求 ▸' : '① GENERATE MANDATE ▸'}</button>
       <button class="btn ghost" id="hw-sign-btn" disabled>${lang === 'zh' ? '② 设备已确认 ▸ 签名' : '② CONFIRMED ON DEVICE ▸ SIGN'}</button>
     </div>
-    <div class="card"><pre id="hw-out" class="mono">${lang === 'zh' ? '点击①：生成授权请求，模拟 OSKey 屏幕显示摘要。\n确认内容无误后，在设备上"确认"，再点②签名。' : 'Click ① to generate the mandate (as shown on the OSKey screen).\nAfter reviewing on the device, click ② to sign.'}</pre></div>`;
+    <div class="card"><pre id="hw-out" class="mono">${lang === 'zh' ? '点击①：生成授权请求，模拟 OSKey 屏幕显示摘要。\n确认内容无误后，在设备上"确认"，再点②签名。' : 'Click ① to generate the mandate (as shown on the OSKey screen).\nAfter reviewing on the device, click ② to sign.'}</pre></div>
+    <div class="card"><pre class="mono">${lang === 'zh'
+      ? '── 真机签名（host app 直连设备）───────────\n在 host app 里对设备签名上述消息，把返回的签名贴回这里验签。'
+      : '── REAL DEVICE SIGNING (host app) ──────────\nSign the message above on the device via the host app, then paste the signature back.'}</pre></div>
+    <div class="row"><input type="text" id="hw-sig-in" placeholder="0x…（设备返回的签名）"><button class="btn ghost" id="hw-verify-btn">${lang === 'zh' ? '验签 ▸' : 'VERIFY ▸'}</button></div>`;
   $('consent-btn').onclick = async () => {
     const { body } = await jfetch('/seal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(DEMO_INPUT()) });
     S.lastDigest = body.digest;
@@ -337,6 +341,14 @@ function renderConsent() {
       `operator   ${esc(body.operator)}\n\n` +
       `<span class="ok">${lang === 'zh' ? '✅ 授权来自物理钥匙：签名恢复出的 operator = 设备地址' : '✅ AUTHORIZATION FROM THE PHYSICAL KEY: recovered operator = device address'}</span>`;
     $('hw-sign-btn').disabled = true;
+  };
+  $('hw-verify-btn').onclick = async () => {
+    const sig = $('hw-sig-in').value.trim();
+    if (!sig) { $('hw-out').innerHTML += `\n\n<span class="err">${lang === 'zh' ? '请先粘贴设备返回的签名' : 'paste a signature first'}</span>`; return; }
+    const { body } = await jfetch('/consent/hardware/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ signature: sig }) });
+    $('hw-out').innerHTML +=
+      `\n\nrecovered  ${esc(body.recovered)}  <span class="${body.match ? 'ok' : 'warn'}">[${body.match ? 'match ✓' : 'signer mismatch'}]</span>\n` +
+      esc(body.note);
   };
 }
 
