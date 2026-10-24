@@ -222,6 +222,7 @@ const server = createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'POST' && p === '/consent/hardware/sign') {
       // 第二步：设备已确认 → 签名 → 验签恢复 operator
       const { createHash } = await import('node:crypto');
       const sha = (s) => '0x' + createHash('sha256').update(s).digest('hex');
